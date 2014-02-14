@@ -57,7 +57,7 @@
         struct objc_super *pProxySuper = &proxySuper;
         __asm__("movq %0, %%rdi;"
                 "movq %1, %%rsi;"
-                "jmpq *%2;"
+                "callq *%2;"
                 : /* No outputs */
                 : "m" (pProxySuper), "r" (sel), "m" (objc_msgSendSuper_fp)
                 : /* No clobber */);
