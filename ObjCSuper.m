@@ -1,3 +1,10 @@
+// % clang -framework Foundation -o ObjCSuper ObjCSuper.m
+// % ./ObjCSuper
+//
+// 2014-02-14 15:47:14.715 ObjCSuper[1571:507] Subclass impl
+// 2014-02-14 15:47:14.717 ObjCSuper[1571:507] Superclass impl
+
+
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
