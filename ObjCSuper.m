@@ -38,41 +38,34 @@
     return [_target respondsToSelector:sel] || [super respondsToSelector:sel];
 }
 
-- (id)forwardingTargetForSelector:(SEL)sel;
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)sel;
 {
-    if ([_target respondsToSelector:sel]) {
-        [self __objc_super_addTrampolineForSelector:sel];
-        return self;
-    } else {
-        return nil;
-    }
+    return [_target methodSignatureForSelector:sel];
 }
 
-- (void)__objc_super_addTrampolineForSelector:(SEL)sel;
+- (void)forwardInvocation:(NSInvocation *)inv;
 {
+    SEL sel = [inv selector];
+    
     Class targetClass = [_target class];
     Method targetMethod = class_getInstanceMethod(targetClass, sel);
-    NSAssert(targetMethod != nil, @"target <%@:%p> to respond to instance method selector %@, but could not find an instance method for it", targetClass, _target, NSStringFromSelector(sel));
+    NSAssert(targetMethod != nil, @"cannot find instance method for selector %@ of target <%@:%p>", NSStringFromSelector(sel), targetClass, _target);
     
-    IMP trampolineImp = _generateTrampoline(sel, _target, _superclass);
-    
-    class_addMethod([self class], sel, trampolineImp, method_getTypeEncoding(targetMethod));
-}
-
-static IMP _generateTrampoline(SEL sel, id target, Class superclass)
-{
-    static void *objc_msgSendSuper_fp = &objc_msgSendSuper;
-    
-    return imp_implementationWithBlock(^(id self1, id self2, ...) {
-        struct objc_super ourSuper = (struct objc_super){target, superclass};
-        struct objc_super *pOurSuper = &ourSuper;
+    IMP trampolineImp = imp_implementationWithBlock(^(ObjCSuper *proxy1, ObjCSuper *proxy2, ...) {
+        static void *objc_msgSendSuper_fp = &objc_msgSendSuper;
+        struct objc_super proxySuper = (struct objc_super){proxy1->_target, proxy1->_superclass};
+        struct objc_super *pProxySuper = &proxySuper;
         __asm__("movq %0, %%rdi;"
                 "movq %1, %%rsi;"
                 "jmpq *%2;"
-                :
-                : "m" (pOurSuper), "r" (sel), "m" (objc_msgSendSuper_fp)
-                :);
+                : /* No outputs */
+                : "m" (pProxySuper), "r" (sel), "m" (objc_msgSendSuper_fp)
+                : /* No clobber */);
     });
+    
+    class_addMethod([self class], sel, trampolineImp, method_getTypeEncoding(targetMethod));
+    [inv setTarget:self];
+    [inv invoke];
 }
 
 @end
