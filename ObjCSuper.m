@@ -42,7 +42,7 @@
 
 - (BOOL)respondsToSelector:(SEL)sel;
 {
-    return [_target respondsToSelector:sel] || [super respondsToSelector:sel];
+    return class_getInstanceMethod(_superclass, sel) != NULL || [[self class] instancesRespondToSelector:sel];
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel;
@@ -95,6 +95,7 @@
 @end
 
 @interface Bar : Foo
+- (void)subclassMethod;
 @end
 
 @implementation Bar
@@ -104,6 +105,11 @@
     NSLog(@"Subclass impl");
 }
 
+- (void)subclassMethod;
+{
+    NSLog(@"Subclass only method");
+}
+
 @end
 
 int main(int argc, char **argv)
@@ -111,9 +117,13 @@ int main(int argc, char **argv)
     @autoreleasepool {
         Bar *b = [Bar new];
         [b someMethod];
+        NSLog(@"b respondsToSelector:@selector(retain)? %@", [b respondsToSelector:@selector(retain)] ? @"YES" : @"NO");
+        NSLog(@"b respondsToSelector:@selector(subclassMethod)? %@", [b respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
         Foo *b_super = (Foo *)[[ObjCSuper alloc] initWithTarget:b];
         [b_super someMethod];
+        NSLog(@"b_super respondsToSelector:@selector(retain)? %@", [b respondsToSelector:@selector(retain)] ? @"YES" : @"NO");
+        NSLog(@"b_super respondsToSelector:@selector(subclassMethod)? %@", [b_super respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
         [b_super release];
         [b release];
