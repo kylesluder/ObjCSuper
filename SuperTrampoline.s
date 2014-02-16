@@ -2,10 +2,9 @@
 //
 // args:
 //   %rdi: pointer to ObjCSuper instance
+.text
+.globl __trampolineImp
 __trampolineImp:
-    .text
-    .globl __trampolineImp
-
     movq _OBJC_IVAR_$_ObjCSuper._super(%rip), %r11
     leaq (%rdi, %r11), %rdi
-    jmp _objc_msgSendSuper
+    jmpq _objc_msgSendSuper
