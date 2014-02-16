@@ -50,7 +50,7 @@
     return [_super.receiver methodSignatureForSelector:sel];
 }
 
-extern IMP _trampolineImp;
+extern id _trampolineImp(id self, SEL _cmd, ...);
 
 - (void)forwardInvocation:(NSInvocation *)inv;
 {
