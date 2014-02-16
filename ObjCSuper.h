@@ -1,6 +1,6 @@
-#import <Foundation/NSProxy.h>
+#import <Foundation/NSObject.h>
 
-@interface ObjCSuper : NSProxy
-- (id)initWithTarget:(id)target;
-- (id)initWithTarget:(id)target superclass:(Class)superclass;
+@interface NSObject (ObjCSuper)
+- (id)super;
+- (id)superOfClass:(Class)superclass;
 @end

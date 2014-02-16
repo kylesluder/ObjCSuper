@@ -69,24 +69,22 @@ int main(int argc, char **argv)
         [b someMethod];
         NSLog(@"b respondsToSelector:@selector(subclassMethod)? %@", [b respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
-        Parent *b_super = (Parent *)[[ObjCSuper alloc] initWithTarget:b];
+        Parent *b_super = (Parent *)[b super];
         [b_super someMethod];
         NSLog(@"b_super respondsToSelector:@selector(subclassMethod)? %@", [b_super respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
-        Grandparent *b_super2 = (Parent *)[[ObjCSuper alloc] initWithTarget:b superclass:[Grandparent class]];
+        Grandparent *b_super2 = (Parent *)[b superOfClass:[Grandparent class]];
         [b_super2 someMethod];
         NSLog(@"b_super2 respondsToSelector:@selector(subclassMethod)? %@", [b_super2 respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
         @try {
-            Unrelated *u = (Unrelated *)[[ObjCSuper alloc] initWithTarget:b superclass:[Unrelated class]];
+            Unrelated *u = (Unrelated *)[b superOfClass:[Unrelated class]];
             [u someMethod];
             NSLog(@"u respondsToSelector:@selector(subclassMethod)? %@", [u respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         } @catch (id exc) {
             NSLog(@"Caught exception while trying to treat Unrelated as a superclass of Child: %@", exc);
         }
         
-        [b_super2 release];
-        [b_super release];
         [b release];
     }
     

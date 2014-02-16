@@ -1,9 +1,13 @@
 #import "ObjCSuper.h"
 
+#import <Foundation/Foundation.h>
 #import <Foundation/NSException.h>
 #import <Foundation/NSInvocation.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
+
+@interface ObjCSuper : NSProxy
+@end
 
 @implementation ObjCSuper
 {
@@ -60,7 +64,16 @@ extern id _trampolineImp(id self, SEL _cmd, ...);
 
 @end
 
+@implementation NSObject (ObjCSuper)
 
+- (id)super;
+{
+    return [[[ObjCSuper alloc] initWithTarget:self] autorelease];
+}
 
-#pragma mark - Test
+- (id)superOfClass:(Class)superclass;
+{
+    return [[[ObjCSuper alloc] initWithTarget:self superclass:superclass] autorelease];
+}
 
+@end
