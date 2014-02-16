@@ -7,4 +7,4 @@
 __trampolineImp:
     movq _OBJC_IVAR_$_ObjCSuper._super(%rip), %r11
     leaq (%rdi, %r11), %rdi
-    jmpq _objc_msgSendSuper
+    jmpq *_objc_msgSendSuper@GOTPCREL(%rip)
