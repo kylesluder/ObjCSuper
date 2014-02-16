@@ -1,9 +1,12 @@
-// % clang -framework Foundation -o ObjCSuper ObjCSuper.m
+// % clang -framework Foundation -o ObjCSuper ObjCSuper.m SuperTrampoline.s
 // % ./ObjCSuper
 //
-// 2014-02-14 15:47:14.715 ObjCSuper[1571:507] Subclass impl
-// 2014-02-14 15:47:14.717 ObjCSuper[1571:507] Superclass impl
-
+// 2014-02-15 23:03:32.498 ObjCSuper[1296:507] Subclass impl
+// 2012014-02-15 23:03:32.498 ObjCSuper[1296:507] Subclass impl4-02-15 23:03:32.500 ObjCSuper[1296:507] b respondsToSelector:@selector(retain)? YES
+// 2014-02-15 23:03:32.500 ObjCSuper[1296:507] b respondsToSelector:@selector(subclassMethod)? YES
+// 2014-02-15 23:03:32.501 ObjCSuper[1296:507] Superclass impl
+// 2014-02-15 23:03:32.501 ObjCSuper[1296:507] b_super respondsToSelector:@selector(retain)? YES
+// 2014-02-15 23:03:32.501 ObjCSuper[1296:507] b_super respondsToSelector:@selector(subclassMethod)? NO
 
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
