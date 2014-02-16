@@ -17,8 +17,7 @@
 @implementation ObjCSuper
 {
 @package
-    id _target;
-    Class _superclass;
+    struct objc_super _super;
 }
 
 - (instancetype)initWithTarget:(id)target;
@@ -28,27 +27,27 @@
 
 - (instancetype)initWithTarget:(id)target superclass:(Class)superclass;
 {
-    _target = [target retain];
-    _superclass = [superclass retain];
+    _super.receiver = [target retain];
+    _super.super_class = [superclass retain];
     
     return self;
 }
 
 - (void)dealloc;
 {
-    [_target release];
-    [_superclass release];
+    [_super.receiver release];
+    [_super.super_class release];
     [super dealloc];
 }
 
 - (BOOL)respondsToSelector:(SEL)sel;
 {
-    return class_getInstanceMethod(_superclass, sel) != NULL || [[self class] instancesRespondToSelector:sel];
+    return class_getInstanceMethod(_super.super_class, sel) != NULL || [[self class] instancesRespondToSelector:sel];
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel;
 {
-    return [_target methodSignatureForSelector:sel];
+    return [_super.receiver methodSignatureForSelector:sel];
 }
 
 extern IMP _trampolineImp;
@@ -57,9 +56,9 @@ extern IMP _trampolineImp;
 {
     SEL sel = [inv selector];
     
-    Class targetClass = [_target class];
+    Class targetClass = [_super.receiver class];
     Method targetMethod = class_getInstanceMethod(targetClass, sel);
-    NSAssert(targetMethod != nil, @"cannot find instance method for selector %@ of target <%@:%p>", NSStringFromSelector(sel), targetClass, _target);
+    NSAssert(targetMethod != nil, @"cannot find instance method for selector %@ of target <%@:%p>", NSStringFromSelector(sel), targetClass, _super.receiver);
     
     class_addMethod([self class], sel, _trampolineImp, method_getTypeEncoding(targetMethod));
     [inv setTarget:self];
