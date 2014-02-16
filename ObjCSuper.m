@@ -30,6 +30,8 @@
 
 - (instancetype)initWithTarget:(id)target superclass:(Class)superclass;
 {
+    NSAssert([target isKindOfClass:superclass], @"target <%@:%p> is not an instance of class %@", [target class], target, superclass);
+    
     _super.receiver = [target retain];
     _super.super_class = [superclass retain];
     
@@ -74,50 +76,79 @@ extern id _trampolineImp(id self, SEL _cmd, ...);
 
 #pragma mark - Test
 
-@interface Foo : NSObject
+@interface Grandparent : NSObject
 - (void)someMethod;
 @end
 
-@implementation Foo
+@implementation Grandparent
 
 - (void)someMethod;
 {
-    NSLog(@"Superclass impl");
+    NSLog(@"%s Superclass impl", __PRETTY_FUNCTION__);
 }
 
 @end
 
-@interface Bar : Foo
+@interface Parent : Grandparent
 - (void)subclassMethod;
 @end
 
-@implementation Bar
+@interface Child : Parent
+@end
+
+@interface Unrelated : Grandparent
+@end
+
+@implementation Parent
 
 - (void)someMethod;
 {
-    NSLog(@"Subclass impl");
+    NSLog(@"%s Subclass impl", __PRETTY_FUNCTION__);
 }
 
 - (void)subclassMethod;
 {
-    NSLog(@"Subclass only method");
+    NSLog(@"%s Subclass only method", __PRETTY_FUNCTION__);
 }
 
+@end
+
+@implementation Child
+
+- (void)someMethod;
+{
+    NSLog(@"%s Overridden method", __PRETTY_FUNCTION__);
+}
+
+@end
+
+@implementation Unrelated
 @end
 
 int main(int argc, char **argv)
 {
     @autoreleasepool {
-        Bar *b = [Bar new];
+        Child *b = [Child new];
         [b someMethod];
-        NSLog(@"b respondsToSelector:@selector(retain)? %@", [b respondsToSelector:@selector(retain)] ? @"YES" : @"NO");
         NSLog(@"b respondsToSelector:@selector(subclassMethod)? %@", [b respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
-        Foo *b_super = (Foo *)[[ObjCSuper alloc] initWithTarget:b];
+        Parent *b_super = (Parent *)[[ObjCSuper alloc] initWithTarget:b];
         [b_super someMethod];
-        NSLog(@"b_super respondsToSelector:@selector(retain)? %@", [b respondsToSelector:@selector(retain)] ? @"YES" : @"NO");
         NSLog(@"b_super respondsToSelector:@selector(subclassMethod)? %@", [b_super respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
         
+        Grandparent *b_super2 = (Parent *)[[ObjCSuper alloc] initWithTarget:b superclass:[Grandparent class]];
+        [b_super2 someMethod];
+        NSLog(@"b_super2 respondsToSelector:@selector(subclassMethod)? %@", [b_super2 respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
+        
+        @try {
+            Unrelated *u = (Unrelated *)[[ObjCSuper alloc] initWithTarget:b superclass:[Unrelated class]];
+            [u someMethod];
+            NSLog(@"u respondsToSelector:@selector(subclassMethod)? %@", [u respondsToSelector:@selector(subclassMethod)] ? @"YES" : @"NO");
+        } @catch (id exc) {
+            NSLog(@"Caught exception while trying to treat Unrelated as a superclass of Child: %@", exc);
+        }
+        
+        [b_super2 release];
         [b_super release];
         [b release];
     }
