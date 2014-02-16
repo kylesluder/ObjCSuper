@@ -37,9 +37,58 @@
     [super dealloc];
 }
 
+#pragma mark - NSProxy<NSObject> subclass
+
+- (Class)class;
+{
+    return [_super.receiver class];
+}
+
+- (Class)superclass;
+{
+    return [_super.receiver superclass];
+}
+
+- (BOOL)isEqual:(id)other;
+{
+    return [_super.receiver isEqual:other];
+}
+
+- (NSUInteger)hash;
+{
+    return [_super.receiver hash];
+}
+
+- (BOOL)isKindOfClass:(Class)cls;
+{
+    return [_super.receiver isKindOfClass:cls];
+}
+
+- (BOOL)isMemberOfClass:(Class)cls;
+{
+    return [_super.receiver isMemberOfClass:cls];
+}
+
+- (BOOL)conformsToProtocol:(Protocol *)proto;
+{
+    return [_super.receiver conformsToProtocol:proto];
+}
+
+- (NSString *)description;
+{
+    return [_super.receiver description];
+}
+
+- (NSString *)debugDescription;
+{
+    return [NSString stringWithFormat:@"<ObjCSuper proxy -- %@:%p>", [_super.receiver class], _super.receiver];
+}
+
+#pragma mark - Forwarding
+
 - (BOOL)respondsToSelector:(SEL)sel;
 {
-    return class_getInstanceMethod(_super.super_class, sel) != NULL || [[self class] instancesRespondToSelector:sel];
+    return [[super class] instancesRespondToSelector:sel] || class_getInstanceMethod(_super.super_class, sel) != NULL;
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)sel;
@@ -57,12 +106,14 @@ extern id _trampolineImp(id self, SEL _cmd, ...);
     Method targetMethod = class_getInstanceMethod(targetClass, sel);
     NSAssert(targetMethod != nil, @"cannot find instance method for selector %@ of target <%@:%p>", NSStringFromSelector(sel), targetClass, _super.receiver);
     
-    class_addMethod([self class], sel, _trampolineImp, method_getTypeEncoding(targetMethod));
+    class_addMethod([super class], sel, _trampolineImp, method_getTypeEncoding(targetMethod));
     [inv setTarget:self];
     [inv invoke];
 }
 
 @end
+
+#pragma mark - API
 
 @implementation NSObject (ObjCSuper)
 
