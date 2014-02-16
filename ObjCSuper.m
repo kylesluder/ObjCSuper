@@ -16,6 +16,7 @@
 
 @implementation ObjCSuper
 {
+@package
     id _target;
     Class _superclass;
 }
@@ -50,6 +51,8 @@
     return [_target methodSignatureForSelector:sel];
 }
 
+extern IMP _trampolineImp;
+
 - (void)forwardInvocation:(NSInvocation *)inv;
 {
     SEL sel = [inv selector];
@@ -58,19 +61,7 @@
     Method targetMethod = class_getInstanceMethod(targetClass, sel);
     NSAssert(targetMethod != nil, @"cannot find instance method for selector %@ of target <%@:%p>", NSStringFromSelector(sel), targetClass, _target);
     
-    IMP trampolineImp = imp_implementationWithBlock(^(ObjCSuper *proxy1, ObjCSuper *proxy2, ...) {
-        static void *objc_msgSendSuper_fp = &objc_msgSendSuper;
-        struct objc_super proxySuper = (struct objc_super){proxy1->_target, proxy1->_superclass};
-        struct objc_super *pProxySuper = &proxySuper;
-        __asm__("movq %0, %%rdi;"
-                "movq %1, %%rsi;"
-                "callq *%2;"
-                : /* No outputs */
-                : "m" (pProxySuper), "r" (sel), "m" (objc_msgSendSuper_fp)
-                : /* No clobber */);
-    });
-    
-    class_addMethod([self class], sel, trampolineImp, method_getTypeEncoding(targetMethod));
+    class_addMethod([self class], sel, _trampolineImp, method_getTypeEncoding(targetMethod));
     [inv setTarget:self];
     [inv invoke];
 }
