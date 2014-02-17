@@ -1,4 +1,4 @@
-// IMP _trampolineImp;
+// id _trampolineImp(ObjCSuper *self, SEL _cmd, ...);
 //
 // args:
 //   %rdi: pointer to ObjCSuper instance
